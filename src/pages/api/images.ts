@@ -1,5 +1,5 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import fauna from 'faunadb';
+import { NextApiRequest, NextApiResponse } from "next";
+import fauna from "faunadb";
 
 const { query } = fauna;
 const client = new fauna.Client({ secret: process.env.FAUNA_API_KEY });
@@ -25,17 +25,17 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ): Promise<void> {
-  if (req.method === 'POST') {
+  if (req.method === "POST") {
     const { url, title, description } = req.body;
 
     return client
       .query(
-        query.Create(query.Collection('images'), {
+        query.Create(query.Collection("images"), {
           data: {
             title,
             description,
-            url,
-          },
+            url
+          }
         })
       )
       .then(() => {
@@ -48,34 +48,34 @@ export default async function handler(
       );
   }
 
-  if (req.method === 'GET') {
+  if (req.method === "GET") {
     const { after } = req.query;
 
     const queryOptions = {
       size: 6,
-      ...(after && { after: query.Ref(query.Collection('images'), after) }),
+      ...(after && { after: query.Ref(query.Collection("images"), after) })
     };
 
     return client
       .query<ImagesQueryResponse>(
         query.Map(
           query.Paginate(
-            query.Documents(query.Collection('images')),
+            query.Documents(query.Collection("images")),
             queryOptions
           ),
-          query.Lambda('X', query.Get(query.Var('X')))
+          query.Lambda("X", query.Get(query.Var("X")))
         )
       )
       .then(response => {
         const formattedData = response.data.map(item => ({
           ...item.data,
           ts: item.ts,
-          id: item.ref.id,
+          id: item.ref.id
         }));
 
         return res.json({
           data: formattedData,
-          after: response.after ? response.after[0].id : null,
+          after: response.after ? response.after[0].id : null
         });
       })
       .catch(err => {
